@@ -1,0 +1,38 @@
+name: Build and publish ChimpiBypass for Windows
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: write
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pyinstaller
+      - name: Build executable
+        run: python -m PyInstaller --clean --onefile --windowed --name ChimpiBypass chimpibypass.py
+      - name: Verify executable
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'dist/ChimpiBypass.exe')) { throw 'Executable missing' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChimpiBypass-Windows-x64
+          path: dist/ChimpiBypass.exe
+          if-no-files-found: error
+      - name: Create release on tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create "$tag" 'dist/ChimpiBypass.exe' --title "ChimpiBypass $tag" --notes "Versão experimental Windows x64. Bibliotecas Mesa3D não incluídas." --prerelease

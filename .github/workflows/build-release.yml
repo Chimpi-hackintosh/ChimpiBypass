@@ -1,6 +1,12 @@
 name: Build and publish ChimpiBypass for Windows
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'chimpibypass.py'
+      - 'bypass_files.py'
+      - 'tests/**'
+      - '.github/workflows/build-release.yml'
   push:
     tags:
       - 'v*'
@@ -15,6 +21,8 @@ jobs:
         with:
           python-version: '3.12'
           architecture: x64
+      - name: Run file-safety regression tests
+        run: python -m unittest discover -s tests -v
       - name: Install PyInstaller
         run: python -m pip install --upgrade pyinstaller
       - name: Build executable

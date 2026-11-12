@@ -29,8 +29,9 @@ class MesaInstallSafetyTests(unittest.TestCase):
         real_copy = bypass_files.shutil.copy2
 
         def fail_after_partial_write(source, target):
-            if Path(source) == self.dll:
-                Path(target).write_bytes(b"partial")
+            destination = Path(target)
+            if destination.parent == self.app and destination.name == "opengl32.dll":
+                destination.write_bytes(b"partial")
                 raise OSError("simulated copy failure")
             return real_copy(source, target)
 

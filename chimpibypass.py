@@ -4,7 +4,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from bypass_files import FILES, MANIFEST, install_mesa_files, restore_mesa_files
+from bypass_files import install_mesa_files, restore_mesa_files
 
 class ChimpiBypass(tk.Tk):
     def __init__(self):

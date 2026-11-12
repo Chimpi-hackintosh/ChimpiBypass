@@ -8,6 +8,7 @@ Gerenciador experimental inspirado no Mesa3D para Windows, criado por Chimpi-hac
 - Backup e restauração de DLLs
 - Abrir o aplicativo selecionado
 - Sem modificar drivers do Windows ou System32
+- Recusa links simbólicos nos destinos e no backup para não seguir caminhos externos
 
 ## Limites
 Não distribui Mesa3D. Use apenas bibliotecas de fontes confiáveis, com arquitetura compatível. Não garante FPS, suporte DirectX ou compatibilidade completa. Evite instalar em pastas de sistema

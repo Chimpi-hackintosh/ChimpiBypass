@@ -1,13 +1,10 @@
 """ChimpiBypass 1.0.0 - experimental per-app Mesa3D manager."""
-import json
-import shutil
 import subprocess
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-MANIFEST = ".chimpibypass.json"
-FILES = ("opengl32.dll", "libgallium_wgl.dll")
+from bypass_files import install_mesa_files, restore_mesa_files
 
 class ChimpiBypass(tk.Tk):
     def __init__(self):
@@ -55,38 +52,9 @@ class ChimpiBypass(tk.Tk):
     def install(self):
         try:
             exe = self.target()
-            folder = Path(self.mesa.get()).resolve()
-            source = folder / FILES[0]
-            if not source.is_file():
-                raise ValueError("Pasta Mesa3D precisa conter opengl32.dll")
-            manifest = exe.parent / MANIFEST
-            if manifest.exists():
-                raise ValueError("Já há uma instalação ChimpiBypass nesta pasta")
             if not messagebox.askyesno("Confirmar", "Instalar DLLs apenas na pasta do aplicativo?"):
                 return
-            sources = [folder / name for name in FILES if (folder / name).is_file()]
-            backup = exe.parent / ".chimpibypass-backup"
-            if backup.exists():
-                raise ValueError("Pasta de backup já existe: restaure ou remova manualmente após verificar")
-            backup.mkdir()
-            installed = []
-            try:
-                for src in sources:
-                    dest = exe.parent / src.name
-                    if dest.exists():
-                        if not dest.is_file(): raise ValueError(f"Destino não é arquivo: {dest}")
-                        shutil.copy2(dest, backup / src.name)
-                    shutil.copy2(src, dest)
-                    installed.append(src.name)
-                manifest.write_text(json.dumps({"files": installed, "backup": backup.name}, indent=2), encoding="utf-8")
-            except Exception:
-                for name in installed:
-                    original = backup / name
-                    dest = exe.parent / name
-                    if original.exists(): shutil.copy2(original, dest)
-                    elif dest.exists(): dest.unlink()
-                shutil.rmtree(backup, ignore_errors=True)
-                raise
+            install_mesa_files(exe, Path(self.mesa.get()))
             self.status.set("DLLs instaladas somente na pasta do aplicativo")
         except Exception as e:
             messagebox.showerror("Falha", str(e))
@@ -94,22 +62,9 @@ class ChimpiBypass(tk.Tk):
     def restore(self):
         try:
             exe = self.target()
-            manifest = exe.parent / MANIFEST
-            if not manifest.is_file(): raise ValueError("Nenhuma instalação ChimpiBypass encontrada")
-            record = json.loads(manifest.read_text(encoding="utf-8"))
-            backup = exe.parent / record["backup"]
-            if not backup.is_dir() or backup.resolve().parent != exe.parent.resolve():
-                raise ValueError("Backup inválido")
             if not messagebox.askyesno("Confirmar", "Restaurar arquivos anteriores?"):
                 return
-            for name in record["files"]:
-                if name not in FILES: raise ValueError("Arquivo inválido no manifesto")
-                dest = exe.parent / name
-                previous = backup / name
-                if previous.is_file(): shutil.copy2(previous, dest)
-                elif dest.exists(): dest.unlink()
-            manifest.unlink()
-            shutil.rmtree(backup)
+            restore_mesa_files(exe)
             self.status.set("Restauração concluída")
         except Exception as e:
             messagebox.showerror("Falha", str(e))

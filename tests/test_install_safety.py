@@ -30,7 +30,7 @@ class MesaInstallSafetyTests(unittest.TestCase):
 
         def fail_after_partial_write(source, target):
             destination = Path(target)
-            if destination.parent == self.app and destination.name == "opengl32.dll":
+            if destination.parent.name.casefold() == "app" and destination.name == "opengl32.dll":
                 destination.write_bytes(b"partial")
                 raise OSError("simulated copy failure")
             return real_copy(source, target)
